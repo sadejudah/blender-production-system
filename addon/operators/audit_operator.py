@@ -1,28 +1,36 @@
-import bpy
+from ..checks.transform_check import run_transform_check
 
+results = run_transform_check()
 
-class BPS_OT_RunAudit(bpy.types.Operator):
-    """Run a production audit"""
+print("=" * 60)
+print("Blender Production System")
+print("Transform Inspection")
+print("=" * 60)
 
-    bl_idname = "bps.run_audit"
-    bl_label = "Run Production Audit"
-    bl_description = "Runs the Blender Production System audit"
+passes = 0
+fails = 0
 
-    def execute(self, context):
+for result in results:
 
-        self.report({'INFO'}, "Production Audit Started")
+    if result["status"] == "PASS":
+        passes += 1
+    else:
+        fails += 1
 
-        print("=" * 50)
-        print("Blender Production System")
-        print("Production Audit Started")
-        print("=" * 50)
+    print(result["object"])
+    print("Status:", result["status"])
 
-        return {'FINISHED'}
+    for issue in result["issues"]:
+        print(" -", issue)
 
+print("=" * 60)
+print("PASS:", passes)
+print("FAIL:", fails)
+print("=" * 60)
 
-def register():
-    bpy.utils.register_class(BPS_OT_RunAudit)
+self.report(
+    {'INFO'},
+    f"{passes} Passed | {fails} Failed"
+)
 
-
-def unregister():
-    bpy.utils.unregister_class(BPS_OT_RunAudit)
+return {'FINISHED'}
