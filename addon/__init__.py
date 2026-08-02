@@ -10,13 +10,24 @@ bl_info = {
     "category": "Pipeline",
 }
 
+from .operators import audit_operator
+from .ui import audit_panel
+
+
+modules = (
+    audit_operator,
+    audit_panel,
+)
+
 
 def register():
-    print("Blender Production System loaded.")
+    for module in modules:
+        module.register()
 
 
 def unregister():
-    print("Blender Production System unloaded.")
+    for module in reversed(modules):
+        module.unregister()
 
 
 if __name__ == "__main__":
