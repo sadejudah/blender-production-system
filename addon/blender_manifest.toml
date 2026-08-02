@@ -1,0 +1,18 @@
+schema_version = "1.0.0"
+
+id = "blender_production_system"
+version = "0.1.0"
+name = "Blender Production System"
+tagline = "Production auditing and certification tools for Blender"
+maintainer = "Patrice Newson"
+type = "add-on"
+
+website = "https://github.com/SadeJudah/blender-production-system"
+
+tags = ["Pipeline", "Development"]
+
+blender_version_min = "4.2.0"
+
+license = [
+  "SPDX:MIT",
+]
