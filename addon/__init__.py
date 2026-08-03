@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Blender Production System",
     "author": "Patrice Newson",
-    "version": (0, 1, 0),
+    "version": (0, 2, 0),
     "blender": (4, 2, 0),
     "location": "View3D > Sidebar > BPS",
     "description": (
@@ -12,11 +12,13 @@ bl_info = {
 
 from .operators import audit_operator
 from .ui import audit_panel
+from .ui import character_panel
 
 
 modules = (
     audit_operator,
     audit_panel,
+    character_panel,
 )
 
 
