@@ -1,6 +1,7 @@
+
 import bpy
 
-from ..checks.transform_check import run_transform_check
+from ..checks.audit_engine import run_production_audit
 from ..reports.report_formatter import print_report
 
 
@@ -13,7 +14,7 @@ class BPS_OT_RunAudit(bpy.types.Operator):
     bl_options = {"REGISTER"}
 
     def execute(self, context):
-        results = run_transform_check()
+        results = run_production_audit()
 
         active_object = context.active_object
         asset_name = active_object.name if active_object else "Current Scene"
