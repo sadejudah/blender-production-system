@@ -1,5 +1,6 @@
 
 import bpy
+from pathlib import Path
 
 
 class BPS_OT_CreateCharacter(bpy.types.Operator):
@@ -12,6 +13,7 @@ class BPS_OT_CreateCharacter(bpy.types.Operator):
 
     def execute(self, context):
         character_name = context.scene.bps_character_name.strip()
+        project_root = context.scene.bps_character_project_root.strip()
 
         if not character_name:
             self.report(
@@ -19,6 +21,13 @@ class BPS_OT_CreateCharacter(bpy.types.Operator):
                 "Enter a character name before creating the character.",
             )
             return {"CANCELLED"}
+            
+           if not project_root:
+               self.report(
+                   {"ERROR"},
+                   "Choose a project destination.",
+             )
+             return {"CANCELLED"}
 
         root_name = character_name
 
