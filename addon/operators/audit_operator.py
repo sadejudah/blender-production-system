@@ -27,16 +27,16 @@ class BPS_OT_RunAudit(bpy.types.Operator):
         )
         failures = len(results) - passes
 
-       self.report(
-    {"INFO"},
-    (
-        f"Score: {summary['score']}% | "
-        f"{summary['passes']} Passed | "
-        f"{summary['failures']} Failed"
-    ),
-)
+        self.report(
+            {"INFO"},
+            (
+                f"Score: {summary['score']}% | "
+                f"{summary['passes']} Passed | "
+                f"{summary['failures']} Failed"
+            ),
+        )
 
-        return {"FINISHED"}
+         return {"FINISHED"}
 
 
 classes = (
