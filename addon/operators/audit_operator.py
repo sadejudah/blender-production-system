@@ -1,6 +1,7 @@
 import bpy
 
 from ..checks.transform_check import run_transform_check
+from ..reports.report_formatter import print_report
 
 
 class BPS_OT_RunAudit(bpy.types.Operator):
@@ -14,34 +15,20 @@ class BPS_OT_RunAudit(bpy.types.Operator):
     def execute(self, context):
         results = run_transform_check()
 
-        print("=" * 60)
-        print("Blender Production System")
-        print("Transform Inspection")
-        print("=" * 60)
+        active_object = context.active_object
+        asset_name = active_object.name if active_object else "Current Scene"
 
-        passes = 0
-        fails = 0
+        print_report(asset_name, results)
 
-        for result in results:
-            if result["status"] == "PASS":
-                passes += 1
-            else:
-                fails += 1
-
-            print(result["object"])
-            print("Status:", result["status"])
-
-            for issue in result["issues"]:
-                print(" -", issue)
-
-        print("=" * 60)
-        print("PASS:", passes)
-        print("FAIL:", fails)
-        print("=" * 60)
+        passes = sum(
+            1 for result in results
+            if result["status"] == "PASS"
+        )
+        failures = len(results) - passes
 
         self.report(
             {"INFO"},
-            f"{passes} Passed | {fails} Failed",
+            f"{passes} Passed | {failures} Failed",
         )
 
         return {"FINISHED"}
