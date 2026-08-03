@@ -77,10 +77,9 @@ class BPS_PT_CharacterPanel(bpy.types.Panel):
 
         import_button = references.row()
         import_button.scale_y = 1.3
-        import_button.enabled = False
         import_button.operator(
-            "wm.call_menu",
-            text="IMPORT REFERENCES — COMING NEXT",
+            "bps.import_character_references",
+            text="IMPORT REFERENCES",
             icon="IMPORT",
         )
 
