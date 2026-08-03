@@ -22,7 +22,7 @@ class BPS_OT_CreateCharacter(bpy.types.Operator):
             )
             return {"CANCELLED"}
 
-        if not project_root:
+            if not project_root:
             self.report(
                 {"ERROR"},
                 "Choose a project destination.",
