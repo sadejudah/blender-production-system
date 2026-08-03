@@ -48,6 +48,44 @@ class BPS_PT_CharacterPanel(bpy.types.Panel):
 
         studio.separator()
 
+        references = studio.box()
+        references.label(
+            text="REFERENCE IMAGES",
+            icon="IMAGE_DATA",
+        )
+
+        references.label(text="Front View")
+        references.prop(
+            scene,
+            "bps_character_front_reference",
+            text="",
+        )
+
+        references.label(text="Side View")
+        references.prop(
+            scene,
+            "bps_character_side_reference",
+            text="",
+        )
+
+        references.label(text="Back View")
+        references.prop(
+            scene,
+            "bps_character_back_reference",
+            text="",
+        )
+
+        import_button = references.row()
+        import_button.scale_y = 1.3
+        import_button.enabled = False
+        import_button.operator(
+            "wm.call_menu",
+            text="IMPORT REFERENCES — COMING NEXT",
+            icon="IMPORT",
+        )
+
+        studio.separator()
+
         create_button = studio.row()
         create_button.scale_y = 1.5
         create_button.operator(
@@ -93,6 +131,27 @@ def register():
         default="",
     )
 
+    bpy.types.Scene.bps_character_front_reference = bpy.props.StringProperty(
+        name="Front Reference",
+        description="Front-view reference image",
+        subtype="FILE_PATH",
+        default="",
+    )
+
+    bpy.types.Scene.bps_character_side_reference = bpy.props.StringProperty(
+        name="Side Reference",
+        description="Side-view reference image",
+        subtype="FILE_PATH",
+        default="",
+    )
+
+    bpy.types.Scene.bps_character_back_reference = bpy.props.StringProperty(
+        name="Back Reference",
+        description="Back-view reference image",
+        subtype="FILE_PATH",
+        default="",
+    )
+
     for cls in classes:
         bpy.utils.register_class(cls)
 
@@ -101,8 +160,14 @@ def unregister():
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
 
-    if hasattr(bpy.types.Scene, "bps_character_project_root"):
-        del bpy.types.Scene.bps_character_project_root
+    property_names = (
+        "bps_character_back_reference",
+        "bps_character_side_reference",
+        "bps_character_front_reference",
+        "bps_character_project_root",
+        "bps_character_name",
+    )
 
-    if hasattr(bpy.types.Scene, "bps_character_name"):
-        del bpy.types.Scene.bps_character_name
+    for property_name in property_names:
+        if hasattr(bpy.types.Scene, property_name):
+            delattr(bpy.types.Scene, property_name)

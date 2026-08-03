@@ -1,4 +1,3 @@
-
 import bpy
 from pathlib import Path
 
@@ -15,14 +14,14 @@ class BPS_OT_CreateCharacter(bpy.types.Operator):
         character_name = context.scene.bps_character_name.strip()
         project_root = context.scene.bps_character_project_root.strip()
 
-                if not character_name:
+        if not character_name:
             self.report(
                 {"ERROR"},
                 "Enter a character name before creating the character.",
             )
             return {"CANCELLED"}
 
-            if not project_root:
+        if not project_root:
             self.report(
                 {"ERROR"},
                 "Choose a project destination.",
@@ -31,8 +30,22 @@ class BPS_OT_CreateCharacter(bpy.types.Operator):
 
         root_name = character_name
         project_path = Path(project_root) / root_name
-        project_path.mkdir(parents=True, exist_ok=True)
-               folder_names = (
+
+        if project_path.exists():
+            self.report(
+                {"ERROR"},
+                f"A project folder named '{root_name}' already exists.",
+            )
+            return {"CANCELLED"}
+
+        if bpy.data.collections.get(root_name):
+            self.report(
+                {"ERROR"},
+                f"A collection named '{root_name}' already exists.",
+            )
+            return {"CANCELLED"}
+
+        folder_names = (
             "00_Project_Admin",
             "01_Reference",
             "02_Model",
@@ -46,12 +59,16 @@ class BPS_OT_CreateCharacter(bpy.types.Operator):
             "10_Backups",
         )
 
-        for folder_name in folder_names:
-            (project_path / folder_name).mkdir(exist_ok=True)
-        if bpy.data.collections.get(root_name):
+        try:
+            project_path.mkdir(parents=True, exist_ok=False)
+
+            for folder_name in folder_names:
+                (project_path / folder_name).mkdir(exist_ok=False)
+
+        except OSError as error:
             self.report(
                 {"ERROR"},
-                f"A collection named '{root_name}' already exists.",
+                f"Could not create the project folders: {error}",
             )
             return {"CANCELLED"}
 
@@ -73,16 +90,16 @@ class BPS_OT_CreateCharacter(bpy.types.Operator):
 
         for subcollection_name in subcollection_names:
             full_name = f"{character_name}_{subcollection_name}"
-
             new_collection = bpy.data.collections.new(full_name)
             root_collection.children.link(new_collection)
 
         context.scene["bps_active_character"] = character_name
         context.scene["bps_character_status"] = "Ready for Setup"
+        context.scene["bps_character_project_path"] = str(project_path)
 
         self.report(
             {"INFO"},
-            f"Character workspace created for {character_name}.",
+            f"Character project created for {character_name}.",
         )
 
         return {"FINISHED"}
