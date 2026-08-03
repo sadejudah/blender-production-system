@@ -1,1 +1,77 @@
 
+import bpy
+
+
+class BPS_OT_CreateCharacter(bpy.types.Operator):
+    """Create the initial Blender collections for a new character."""
+
+    bl_idname = "bps.create_character"
+    bl_label = "Create Character"
+    bl_description = "Create a structured Blender workspace for a new character"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        character_name = context.scene.bps_character_name.strip()
+
+        if not character_name:
+            self.report(
+                {"ERROR"},
+                "Enter a character name before creating the character.",
+            )
+            return {"CANCELLED"}
+
+        root_name = character_name
+
+        if bpy.data.collections.get(root_name):
+            self.report(
+                {"ERROR"},
+                f"A collection named '{root_name}' already exists.",
+            )
+            return {"CANCELLED"}
+
+        scene_collection = context.scene.collection
+
+        root_collection = bpy.data.collections.new(root_name)
+        scene_collection.children.link(root_collection)
+
+        subcollection_names = (
+            "Reference",
+            "Model",
+            "Rig",
+            "Textures",
+            "Materials",
+            "Animation",
+            "Render",
+            "Hidden",
+        )
+
+        for subcollection_name in subcollection_names:
+            full_name = f"{character_name}_{subcollection_name}"
+
+            new_collection = bpy.data.collections.new(full_name)
+            root_collection.children.link(new_collection)
+
+        context.scene["bps_active_character"] = character_name
+        context.scene["bps_character_status"] = "Ready for Setup"
+
+        self.report(
+            {"INFO"},
+            f"Character workspace created for {character_name}.",
+        )
+
+        return {"FINISHED"}
+
+
+classes = (
+    BPS_OT_CreateCharacter,
+)
+
+
+def register():
+    for cls in classes:
+        bpy.utils.register_class(cls)
+
+
+def unregister():
+    for cls in reversed(classes):
+        bpy.utils.unregister_class(cls)
