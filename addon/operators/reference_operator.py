@@ -89,29 +89,41 @@ class BPS_OT_ImportCharacterReferences(bpy.types.Operator):
 
             reference_collection.objects.link(reference_object)
 
-            if view_name == "Front":
-                reference_object.location = (0.0, 0.0, 1.0)
-                reference_object.rotation_euler = (
-                    1.57079632679,
-                    0.0,
-                    0.0,
-                )
+            reference_transforms = {
+                "Front": {
+                    "location": (0.0, 0.0, 1.0),
+                    "rotation": (
+                        1.57079632679,
+                        0.0,
+                        0.0,
+                    ),
+                    "size": 2.0,
+                },
+                "Side": {
+                    "location": (0.0, 0.0, 1.0),
+                    "rotation": (
+                        1.57079632679,
+                        0.0,
+                        1.57079632679,
+                    ),
+                    "size": 2.0,
+                },
+                "Back": {
+                    "location": (0.0, 0.15, 1.0),
+                    "rotation": (
+                        1.57079632679,
+                        0.0,
+                        3.14159265359,
+                    ),
+                    "size": 2.0,
+                },
+            }
 
-            elif view_name == "Side":
-                reference_object.location = (0.0, 0.0, 1.0)
-                reference_object.rotation_euler = (
-                    1.57079632679,
-                    0.0,
-                    1.57079632679,
-                )
+            transform = reference_transforms[view_name]
 
-            elif view_name == "Back":
-                reference_object.location = (0.0, 0.15, 1.0)
-                reference_object.rotation_euler = (
-                    1.57079632679,
-                    0.0,
-                    3.14159265359,
-                )
+            reference_object.location = transform["location"]
+            reference_object.rotation_euler = transform["rotation"]
+            reference_object.empty_display_size = transform["size"]
 
             reference_object.lock_location = (True, True, True)
             reference_object.lock_rotation = (True, True, True)
