@@ -100,20 +100,20 @@ class BPS_OT_ImportCharacterReferences(bpy.types.Operator):
                     "size": 2.0,
                 },
                 "Side": {
-                    "location": (0.0, 0.0, 1.0),
+                    "location": (-2.5, 0.0, 1.0),
                     "rotation": (
                         1.57079632679,
                         0.0,
-                        1.57079632679,
+                        0.0,
                     ),
                     "size": 2.0,
                 },
                 "Back": {
-                    "location": (0.0, 0.15, 1.0),
+                    "location": (2.5, 0.0, 1.0),
                     "rotation": (
                         1.57079632679,
                         0.0,
-                        3.14159265359,
+                        0.0,
                     ),
                     "size": 2.0,
                 },
