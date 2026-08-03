@@ -1,4 +1,3 @@
-
 import bpy
 
 from ..checks.audit_engine import run_production_audit
@@ -14,27 +13,27 @@ class BPS_OT_RunAudit(bpy.types.Operator):
     bl_options = {"REGISTER"}
 
     def execute(self, context):
-    results = run_production_audit()
+        results = run_production_audit()
 
-    active_object = context.active_object
-    asset_name = (
-        active_object.name
-        if active_object
-        else "Current Scene"
-    )
+        active_object = context.active_object
+        asset_name = (
+            active_object.name
+            if active_object
+            else "Current Scene"
+        )
 
-    summary = print_report(asset_name, results)
+        summary = print_report(asset_name, results)
 
-    self.report(
-        {"INFO"},
-        (
-            f"Score: {summary['score']}% | "
-            f"{summary['passes']} Passed | "
-            f"{summary['failures']} Failed"
-        ),
-    )
+        self.report(
+            {"INFO"},
+            (
+                f"Score: {summary['score']}% | "
+                f"{summary['passes']} Passed | "
+                f"{summary['failures']} Failed"
+            ),
+        )
 
-    return {"FINISHED"}
+        return {"FINISHED"}
 
 
 classes = (
