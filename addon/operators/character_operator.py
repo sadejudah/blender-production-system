@@ -3,7 +3,7 @@ from pathlib import Path
 
 
 class BPS_OT_CreateCharacter(bpy.types.Operator):
-    """Create the initial Blender collections for a new character."""
+    """Create a complete Blender workspace for a new character."""
 
     bl_idname = "bps.create_character"
     bl_label = "Create Character"
@@ -92,6 +92,61 @@ class BPS_OT_CreateCharacter(bpy.types.Operator):
             full_name = f"{character_name}_{subcollection_name}"
             new_collection = bpy.data.collections.new(full_name)
             root_collection.children.link(new_collection)
+
+        # -------------------------------------------------
+        # Create Ground Collection
+        # -------------------------------------------------
+
+        ground_collection = bpy.data.collections.new(
+            f"{character_name}_Ground"
+        )
+        root_collection.children.link(ground_collection)
+
+        # -------------------------------------------------
+        # Create Ground Plane
+        # -------------------------------------------------
+
+        bpy.ops.mesh.primitive_plane_add(
+            size=10.0,
+            location=(0.0, 0.0, 0.0),
+        )
+
+        ground_plane = context.active_object
+        ground_plane.name = f"{character_name}_Ground_Plane"
+
+        # Move the plane out of its default collection.
+        for collection in list(ground_plane.users_collection):
+            collection.objects.unlink(ground_plane)
+
+        ground_collection.objects.link(ground_plane)
+
+        # Lock transforms.
+        ground_plane.lock_location = (True, True, True)
+        ground_plane.lock_rotation = (True, True, True)
+        ground_plane.lock_scale = (True, True, True)
+
+        # Keep it visible in the viewport but out of final renders.
+        ground_plane.hide_render = True
+        ground_plane.display_type = "SOLID"
+
+        # -------------------------------------------------
+        # Create Gray Ground Material
+        # -------------------------------------------------
+
+        material_name = f"{character_name}_Ground_Material"
+        ground_material = bpy.data.materials.new(material_name)
+        ground_material.diffuse_color = (
+            0.18,
+            0.18,
+            0.18,
+            1.0,
+        )
+
+        ground_plane.data.materials.append(ground_material)
+
+        # -------------------------------------------------
+        # Store Character Metadata
+        # -------------------------------------------------
 
         context.scene["bps_active_character"] = character_name
         context.scene["bps_character_status"] = "Ready for Setup"
