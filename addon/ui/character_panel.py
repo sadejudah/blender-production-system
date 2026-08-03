@@ -92,6 +92,28 @@ class BPS_PT_CharacterPanel(bpy.types.Panel):
             text="CREATE CHARACTER PROJECT",
             icon="ADD",
         )
+        view_buttons = references.row(align=True)
+
+        front_button = view_buttons.operator(
+            "bps.open_blueprint_view",
+            text="FRONT",
+            icon="VIEW_FRONT",
+        )
+        front_button.view_axis = "FRONT"
+
+        side_button = view_buttons.operator(
+            "bps.open_blueprint_view",
+            text="SIDE",
+            icon="VIEW_RIGHT",
+        )
+        side_button.view_axis = "RIGHT"
+
+        back_button = view_buttons.operator(
+            "bps.open_blueprint_view",
+            text="BACK",
+            icon="VIEW_BACK",
+        )
+        back_button.view_axis = "BACK"
 
         active_character = scene.get("bps_active_character", "")
 

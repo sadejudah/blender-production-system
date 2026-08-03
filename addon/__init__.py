@@ -13,6 +13,7 @@ bl_info = {
 from .operators import audit_operator
 from .operators import character_operator
 from .operators import reference_operator
+from .operators import view_operator
 from .ui import audit_panel
 from .ui import character_panel
 
@@ -21,6 +22,7 @@ modules = (
     audit_operator,
     character_operator,
     reference_operator,
+    view_operator,
     audit_panel,
     character_panel,
 )
