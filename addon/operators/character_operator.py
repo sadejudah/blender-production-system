@@ -15,40 +15,39 @@ class BPS_OT_CreateCharacter(bpy.types.Operator):
         character_name = context.scene.bps_character_name.strip()
         project_root = context.scene.bps_character_project_root.strip()
 
-        if not character_name:
+                if not character_name:
             self.report(
                 {"ERROR"},
                 "Enter a character name before creating the character.",
             )
             return {"CANCELLED"}
-            
-           if not project_root:
-               self.report(
-                   {"ERROR"},
-                   "Choose a project destination.",
-             )
-             return {"CANCELLED"}
+
+        if not project_root:
+            self.report(
+                {"ERROR"},
+                "Choose a project destination.",
+            )
+            return {"CANCELLED"}
 
         root_name = character_name
         project_path = Path(project_root) / root_name
         project_path.mkdir(parents=True, exist_ok=True)
-        folder_names = (
-    "00_Project_Admin",
-    "01_Reference",
-    "02_Model",
-    "03_Rig",
-    "04_Textures",
-    "05_Materials",
-    "06_Animation",
-    "07_Render",
-    "08_Exports",
-    "09_Deliverables",
-    "10_Backups",
-)
+               folder_names = (
+            "00_Project_Admin",
+            "01_Reference",
+            "02_Model",
+            "03_Rig",
+            "04_Textures",
+            "05_Materials",
+            "06_Animation",
+            "07_Render",
+            "08_Exports",
+            "09_Deliverables",
+            "10_Backups",
+        )
 
-for folder_name in folder_names:
-    (project_path / folder_name).mkdir(exist_ok=True)
-
+        for folder_name in folder_names:
+            (project_path / folder_name).mkdir(exist_ok=True)
         if bpy.data.collections.get(root_name):
             self.report(
                 {"ERROR"},
