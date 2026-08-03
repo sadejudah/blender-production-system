@@ -24,6 +24,20 @@ class BPS_OT_RunAudit(bpy.types.Operator):
 
         summary = print_report(asset_name, results)
 
+        # Store the latest audit results in the Blender scene.
+        # The Studio Dashboard reads these values.
+        scene = context.scene
+        scene["bps_last_score"] = int(summary["score"])
+        scene["bps_last_passes"] = int(summary["passes"])
+        scene["bps_last_failures"] = int(summary["failures"])
+        scene["bps_last_status"] = str(summary["status"])
+        scene["bps_audit_has_run"] = True
+
+        # Refresh the Blender interface so the dashboard updates immediately.
+        for area in context.screen.areas:
+            if area.type == "VIEW_3D":
+                area.tag_redraw()
+
         self.report(
             {"INFO"},
             (
