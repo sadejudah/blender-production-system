@@ -3,7 +3,7 @@ import bpy
 
 
 class BPS_PT_CharacterPanel(bpy.types.Panel):
-    """Character Studio"""
+    """Character Studio panel."""
 
     bl_idname = "BPS_PT_character_panel"
     bl_label = "Character Studio"
@@ -13,31 +13,65 @@ class BPS_PT_CharacterPanel(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
+        scene = context.scene
 
-        box = layout.box()
-
-        box.label(
+        studio = layout.box()
+        studio.label(
             text="CHARACTER STUDIO",
-            icon="OUTLINER_OB_ARMATURE"
+            icon="OUTLINER_OB_ARMATURE",
         )
 
-        box.separator()
+        studio.separator()
 
-        box.label(text="Character Name")
-
-        box.prop(
-            context.scene,
+        studio.label(text="Character Name")
+        studio.prop(
+            scene,
             "bps_character_name",
-            text=""
+            text="",
         )
 
-        box.separator()
+        studio.separator()
 
-        box.operator(
+        studio.label(text="Project Destination")
+        studio.prop(
+            scene,
+            "bps_character_project_root",
+            text="",
+        )
+
+        help_box = studio.box()
+        help_box.label(
+            text="BPS will create the character folder",
+            icon="INFO",
+        )
+        help_box.label(text="inside the selected destination.")
+
+        studio.separator()
+
+        create_button = studio.row()
+        create_button.scale_y = 1.5
+        create_button.operator(
             "bps.create_character",
-            text="Create Character",
-            icon="ADD"
+            text="CREATE CHARACTER PROJECT",
+            icon="ADD",
         )
+
+        active_character = scene.get("bps_active_character", "")
+
+        if active_character:
+            status_box = layout.box()
+            status_box.label(
+                text="ACTIVE CHARACTER",
+                icon="CHECKMARK",
+            )
+            status_box.label(text=active_character)
+            status_box.label(
+                text=scene.get(
+                    "bps_character_status",
+                    "Ready for Setup",
+                ),
+                icon="INFO",
+            )
 
 
 classes = (
@@ -46,10 +80,17 @@ classes = (
 
 
 def register():
-
     bpy.types.Scene.bps_character_name = bpy.props.StringProperty(
         name="Character Name",
-        default=""
+        description="Name of the new character",
+        default="",
+    )
+
+    bpy.types.Scene.bps_character_project_root = bpy.props.StringProperty(
+        name="Project Destination",
+        description="Folder where the character project will be created",
+        subtype="DIR_PATH",
+        default="",
     )
 
     for cls in classes:
@@ -57,8 +98,11 @@ def register():
 
 
 def unregister():
-
-    del bpy.types.Scene.bps_character_name
-
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
+
+    if hasattr(bpy.types.Scene, "bps_character_project_root"):
+        del bpy.types.Scene.bps_character_project_root
+
+    if hasattr(bpy.types.Scene, "bps_character_name"):
+        del bpy.types.Scene.bps_character_name
