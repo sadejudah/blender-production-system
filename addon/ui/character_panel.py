@@ -99,19 +99,23 @@ class BPS_PT_CharacterPanel(bpy.types.Panel):
             text="FRONT",
             icon="VIEW_FRONT",
         )
+        view_buttons = references.row(align=True)
+
+        front_button = view_buttons.operator(
+            "bps.open_blueprint_view",
+            text="FRONT",
+        )
         front_button.view_axis = "FRONT"
 
         side_button = view_buttons.operator(
             "bps.open_blueprint_view",
             text="SIDE",
-            icon="VIEW_RIGHT",
         )
         side_button.view_axis = "RIGHT"
 
         back_button = view_buttons.operator(
             "bps.open_blueprint_view",
             text="BACK",
-            icon="VIEW_BACK",
         )
         back_button.view_axis = "BACK"
 
