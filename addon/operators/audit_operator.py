@@ -19,7 +19,7 @@ class BPS_OT_RunAudit(bpy.types.Operator):
         active_object = context.active_object
         asset_name = active_object.name if active_object else "Current Scene"
 
-        print_report(asset_name, results)
+        summary = print_report(asset_name, results)
 
         passes = sum(
             1 for result in results
@@ -27,10 +27,14 @@ class BPS_OT_RunAudit(bpy.types.Operator):
         )
         failures = len(results) - passes
 
-        self.report(
-            {"INFO"},
-            f"{passes} Passed | {failures} Failed",
-        )
+       self.report(
+    {"INFO"},
+    (
+        f"Score: {summary['score']}% | "
+        f"{summary['passes']} Passed | "
+        f"{summary['failures']} Failed"
+    ),
+)
 
         return {"FINISHED"}
 
