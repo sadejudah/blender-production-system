@@ -30,6 +30,24 @@ class BPS_OT_CreateCharacter(bpy.types.Operator):
              return {"CANCELLED"}
 
         root_name = character_name
+        project_path = Path(project_root) / root_name
+        project_path.mkdir(parents=True, exist_ok=True)
+        folder_names = (
+    "00_Project_Admin",
+    "01_Reference",
+    "02_Model",
+    "03_Rig",
+    "04_Textures",
+    "05_Materials",
+    "06_Animation",
+    "07_Render",
+    "08_Exports",
+    "09_Deliverables",
+    "10_Backups",
+)
+
+for folder_name in folder_names:
+    (project_path / folder_name).mkdir(exist_ok=True)
 
         if bpy.data.collections.get(root_name):
             self.report(
