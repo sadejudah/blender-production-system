@@ -1,4 +1,3 @@
-
 """Character Studio parent panel and shared character properties."""
 
 import bpy
