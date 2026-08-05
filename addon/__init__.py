@@ -58,14 +58,12 @@ modules = (
     # Main panels
     audit_panel,
     character_panel,
+    blueprint_panel,
 
     # Character Studio child panels
     project_panel,
     reference_panel,
     status_panel,
-
-    # Independent workflow panels
-    blueprint_panel,
 )
 
 
