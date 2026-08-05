@@ -1,7 +1,7 @@
 schema_version = "1.0.0"
 
 id = "blender_production_system"
-version = "1.1.2"
+version = "1.1.4"
 name = "Blender Production System"
 tagline = "Modular character production tools for Blender"
 maintainer = "Patrice Newson"
