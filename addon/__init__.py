@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Blender Production System",
     "author": "Patrice Newson",
-    "version": (1, 1, 0),
+    "version": (1, 1, 2),
     "blender": (4, 2, 0),
     "location": "View3D > Sidebar > BPS",
     "description": (
@@ -35,6 +35,7 @@ from .ui import audit_panel
 from .ui import character_panel
 from .ui import project_panel
 from .ui import reference_panel
+from .ui import blueprint_panel
 from .ui import status_panel
 
 
@@ -58,10 +59,13 @@ modules = (
     audit_panel,
     character_panel,
 
-    # Character-panel child panels
+    # Character Studio child panels
     project_panel,
     reference_panel,
     status_panel,
+
+    # Independent workflow panels
+    blueprint_panel,
 )
 
 
