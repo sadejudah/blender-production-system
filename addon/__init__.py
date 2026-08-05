@@ -60,6 +60,7 @@ modules = (
     audit_panel,
     character_panel,
     blueprint_panel,
+    modeling_panel,
 
     # Character Studio child panels
     project_panel,
