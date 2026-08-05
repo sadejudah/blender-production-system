@@ -1,4 +1,16 @@
+"""Base Mesh Operators.
+
+The public operator routes generation through the BPS engine.
+The legacy operator preserves the proven geometry-building workflow.
+"""
+
 import bpy
+
+from ..engine import create_build_context
+from ..engine.base_mesh_builder import (
+    BaseMeshBuildError,
+    build_base_mesh,
+)
 
 
 # ---------------------------------------------------------
@@ -73,31 +85,66 @@ BASE_MESH_PRESETS = {
 # COLLECTION HELPERS
 # ---------------------------------------------------------
 
-def move_object_to_collection(obj, collection):
+def move_object_to_collection(
+    obj,
+    collection,
+):
     """Move an object into one specific Blender collection."""
 
-    for current_collection in list(obj.users_collection):
+    for current_collection in list(
+        obj.users_collection
+    ):
         current_collection.objects.unlink(obj)
 
     collection.objects.link(obj)
 
 
-def remove_existing_base_mesh(model_collection, character_name):
+def remove_existing_base_mesh(
+    model_collection,
+    character_name,
+):
     """Remove previously generated BPS base-mesh objects."""
 
     prefix = f"{character_name}_Base_"
 
     for obj in list(model_collection.objects):
-        if obj.name.startswith(prefix):
-            bpy.data.objects.remove(
-                obj,
-                do_unlink=True,
-            )
+        if not obj.name.startswith(prefix):
+            continue
+
+        mesh_data = (
+            obj.data
+            if obj.type == "MESH"
+            else None
+        )
+
+        bpy.data.objects.remove(
+            obj,
+            do_unlink=True,
+        )
+
+        if (
+            mesh_data is not None
+            and mesh_data.users == 0
+        ):
+            bpy.data.meshes.remove(mesh_data)
 
 
 # ---------------------------------------------------------
 # OBJECT HELPERS
 # ---------------------------------------------------------
+
+def mark_generated_object(
+    obj,
+    generator_name,
+):
+    """Attach standard BPS metadata to a generated object."""
+
+    obj["bps_generated_base_mesh"] = True
+    obj["bps_generator"] = generator_name
+    obj["bps_generator_version"] = "1.1.1"
+
+    return obj
+
 
 def create_uv_sphere(
     context,
@@ -105,7 +152,10 @@ def create_uv_sphere(
     name,
     location,
     scale,
+    generator_name,
 ):
+    """Create one generated UV sphere."""
+
     bpy.ops.mesh.primitive_uv_sphere_add(
         segments=24,
         ring_count=16,
@@ -127,7 +177,13 @@ def create_uv_sphere(
         collection,
     )
 
-    return obj
+    for polygon in obj.data.polygons:
+        polygon.use_smooth = True
+
+    return mark_generated_object(
+        obj,
+        generator_name,
+    )
 
 
 def create_cube(
@@ -136,7 +192,10 @@ def create_cube(
     name,
     location,
     dimensions,
+    generator_name,
 ):
+    """Create one generated cube form."""
+
     bpy.ops.mesh.primitive_cube_add(
         size=1.0,
         location=location,
@@ -157,7 +216,10 @@ def create_cube(
         collection,
     )
 
-    return obj
+    return mark_generated_object(
+        obj,
+        generator_name,
+    )
 
 
 def create_cylinder(
@@ -167,7 +229,10 @@ def create_cylinder(
     location,
     radius,
     depth,
+    generator_name,
 ):
+    """Create one generated cylinder form."""
+
     bpy.ops.mesh.primitive_cylinder_add(
         vertices=16,
         radius=radius,
@@ -183,23 +248,123 @@ def create_cylinder(
         collection,
     )
 
-    return obj
+    for polygon in obj.data.polygons:
+        polygon.use_smooth = True
+
+    return mark_generated_object(
+        obj,
+        generator_name,
+    )
 
 
 # ---------------------------------------------------------
-# BASE-MESH OPERATOR
+# ENGINE-ROUTED PUBLIC OPERATOR
 # ---------------------------------------------------------
 
 class BPS_OT_GenerateBaseMesh(bpy.types.Operator):
-    """Generate a stylized character base-mesh blockout."""
+    """Generate the active character base mesh through the BPS engine."""
 
     bl_idname = "bps.generate_base_mesh"
     bl_label = "Generate Base Mesh"
     bl_description = (
-        "Generate a proportionally scaled character blockout "
-        "using the selected blueprint preset"
+        "Generate the selected character's base mesh "
+        "through the Blender Production System engine"
     )
-    bl_options = {"REGISTER", "UNDO"}
+    bl_options = {
+        "REGISTER",
+        "UNDO",
+    }
+
+    def execute(self, context):
+        scene = context.scene
+
+        active_character = scene.get(
+            "bps_active_character",
+            "",
+        )
+
+        if not active_character:
+            self.report(
+                {"ERROR"},
+                "Create or activate a character project first.",
+            )
+            return {"CANCELLED"}
+
+        try:
+            build_context = create_build_context(
+                scene
+            )
+
+            result = build_base_mesh(
+                build_context
+            )
+
+        except BaseMeshBuildError as error:
+            self.report(
+                {"ERROR"},
+                str(error),
+            )
+            return {"CANCELLED"}
+
+        except (
+            AttributeError,
+            KeyError,
+            RuntimeError,
+            TypeError,
+            ValueError,
+        ) as error:
+            self.report(
+                {"ERROR"},
+                (
+                    "The BPS engine could not generate "
+                    f"the base mesh: {error}"
+                ),
+            )
+            return {"CANCELLED"}
+
+        if "FINISHED" not in result:
+            self.report(
+                {"ERROR"},
+                "Base-mesh generation did not finish.",
+            )
+            return {"CANCELLED"}
+
+        scene[
+            "bps_character_status"
+        ] = "Engine Base Mesh Generated"
+
+        scene[
+            "bps_base_mesh_engine"
+        ] = "GeneratorEngine"
+
+        self.report(
+            {"INFO"},
+            (
+                f"Engine-routed base mesh generated for "
+                f"{active_character}."
+            ),
+        )
+
+        return {"FINISHED"}
+
+
+# ---------------------------------------------------------
+# LEGACY GEOMETRY OPERATOR
+# ---------------------------------------------------------
+
+class BPS_OT_GenerateBaseMeshLegacy(bpy.types.Operator):
+    """Run the proven internal base-mesh geometry workflow."""
+
+    bl_idname = "bps.generate_base_mesh_legacy"
+    bl_label = "Generate Base Mesh Legacy"
+    bl_description = (
+        "Internal geometry builder used by the "
+        "Blender Production System engine"
+    )
+    bl_options = {
+        "INTERNAL",
+        "UNDO",
+    }
 
     def execute(self, context):
         scene = context.scene
@@ -232,7 +397,9 @@ class BPS_OT_GenerateBaseMesh(bpy.types.Operator):
             BASE_MESH_PRESETS["PRESCHOOL"],
         )
 
-        model_collection_name = f"{character_name}_Model"
+        model_collection_name = (
+            f"{character_name}_Model"
+        )
 
         model_collection = bpy.data.collections.get(
             model_collection_name
@@ -241,22 +408,28 @@ class BPS_OT_GenerateBaseMesh(bpy.types.Operator):
         if model_collection is None:
             self.report(
                 {"ERROR"},
-                f"Collection '{model_collection_name}' was not found.",
+                (
+                    f"Collection '{model_collection_name}' "
+                    "was not found."
+                ),
             )
             return {"CANCELLED"}
 
         remove_existing_base_mesh(
-            model_collection,
-            character_name,
+            model_collection=model_collection,
+            character_name=character_name,
         )
 
-        h = character_height
+        height = character_height
 
         # -------------------------------------------------
         # HEAD
         # -------------------------------------------------
 
-        head_radius = h * preset["head_radius"]
+        head_radius = (
+            height
+            * preset["head_radius"]
+        )
 
         create_uv_sphere(
             context=context,
@@ -265,13 +438,14 @@ class BPS_OT_GenerateBaseMesh(bpy.types.Operator):
             location=(
                 0.0,
                 0.0,
-                h * preset["head_z"],
+                height * preset["head_z"],
             ),
             scale=(
                 head_radius,
                 head_radius * 0.92,
                 head_radius * 1.08,
             ),
+            generator_name="Head",
         )
 
         # -------------------------------------------------
@@ -285,13 +459,14 @@ class BPS_OT_GenerateBaseMesh(bpy.types.Operator):
             location=(
                 0.0,
                 0.0,
-                h * preset["torso_z"],
+                height * preset["torso_z"],
             ),
             dimensions=(
-                h * preset["torso_width"],
-                h * preset["torso_depth"],
-                h * preset["torso_height"],
+                height * preset["torso_width"],
+                height * preset["torso_depth"],
+                height * preset["torso_height"],
             ),
+            generator_name="Torso",
         )
 
         # -------------------------------------------------
@@ -305,23 +480,39 @@ class BPS_OT_GenerateBaseMesh(bpy.types.Operator):
             location=(
                 0.0,
                 0.0,
-                h * preset["pelvis_z"],
+                height * preset["pelvis_z"],
             ),
             dimensions=(
-                h * preset["pelvis_width"],
-                h * preset["pelvis_depth"],
-                h * preset["pelvis_height"],
+                height * preset["pelvis_width"],
+                height * preset["pelvis_depth"],
+                height * preset["pelvis_height"],
             ),
+            generator_name="Pelvis",
         )
 
         # -------------------------------------------------
         # ARMS
         # -------------------------------------------------
 
-        arm_radius = h * preset["arm_radius"]
-        arm_length = h * preset["arm_length"]
-        arm_x = h * preset["arm_x"]
-        arm_z = h * preset["arm_z"]
+        arm_radius = (
+            height
+            * preset["arm_radius"]
+        )
+
+        arm_length = (
+            height
+            * preset["arm_length"]
+        )
+
+        arm_x = (
+            height
+            * preset["arm_x"]
+        )
+
+        arm_z = (
+            height
+            * preset["arm_z"]
+        )
 
         create_cylinder(
             context=context,
@@ -334,6 +525,7 @@ class BPS_OT_GenerateBaseMesh(bpy.types.Operator):
             ),
             radius=arm_radius,
             depth=arm_length,
+            generator_name="Arm",
         )
 
         create_cylinder(
@@ -347,16 +539,32 @@ class BPS_OT_GenerateBaseMesh(bpy.types.Operator):
             ),
             radius=arm_radius,
             depth=arm_length,
+            generator_name="Arm",
         )
 
         # -------------------------------------------------
         # LEGS
         # -------------------------------------------------
 
-        leg_radius = h * preset["leg_radius"]
-        leg_length = h * preset["leg_length"]
-        leg_x = h * preset["leg_x"]
-        leg_z = h * preset["leg_z"]
+        leg_radius = (
+            height
+            * preset["leg_radius"]
+        )
+
+        leg_length = (
+            height
+            * preset["leg_length"]
+        )
+
+        leg_x = (
+            height
+            * preset["leg_x"]
+        )
+
+        leg_z = (
+            height
+            * preset["leg_z"]
+        )
 
         create_cylinder(
             context=context,
@@ -369,6 +577,7 @@ class BPS_OT_GenerateBaseMesh(bpy.types.Operator):
             ),
             radius=leg_radius,
             depth=leg_length,
+            generator_name="Leg",
         )
 
         create_cylinder(
@@ -382,11 +591,18 @@ class BPS_OT_GenerateBaseMesh(bpy.types.Operator):
             ),
             radius=leg_radius,
             depth=leg_length,
+            generator_name="Leg",
         )
 
         # -------------------------------------------------
         # METADATA
         # -------------------------------------------------
+
+        selected_template = getattr(
+            scene,
+            "bps_character_template",
+            "GENERIC",
+        )
 
         model_collection[
             "bps_base_mesh_generated"
@@ -400,6 +616,18 @@ class BPS_OT_GenerateBaseMesh(bpy.types.Operator):
             "bps_base_mesh_height"
         ] = character_height
 
+        model_collection[
+            "bps_character_template"
+        ] = selected_template
+
+        model_collection[
+            "bps_base_mesh_builder"
+        ] = "LegacyGeometryAdapter"
+
+        model_collection[
+            "bps_base_mesh_version"
+        ] = "1.1.1"
+
         scene[
             "bps_character_status"
         ] = "Base Mesh Generated"
@@ -407,24 +635,34 @@ class BPS_OT_GenerateBaseMesh(bpy.types.Operator):
         self.report(
             {"INFO"},
             (
-                f"Base mesh generated for {character_name} "
-                f"at {character_height:.2f} meters."
+                f"Base mesh generated for "
+                f"{character_name} at "
+                f"{character_height:.2f} meters."
             ),
         )
 
         return {"FINISHED"}
 
 
+# ---------------------------------------------------------
+# REGISTRATION
+# ---------------------------------------------------------
+
 classes = (
+    BPS_OT_GenerateBaseMeshLegacy,
     BPS_OT_GenerateBaseMesh,
 )
 
 
 def register():
+    """Register the internal builder before the public operator."""
+
     for cls in classes:
         bpy.utils.register_class(cls)
 
 
 def unregister():
+    """Unregister the public operator before the internal builder."""
+
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
