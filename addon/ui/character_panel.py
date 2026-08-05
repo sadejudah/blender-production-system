@@ -2,7 +2,7 @@
 
 import bpy
 
-from ..templates import get_template
+from ..data import resolve_character_data
 from ..templates import get_template_items
 
 
@@ -11,51 +11,85 @@ from ..templates import get_template_items
 # ---------------------------------------------------------
 
 def apply_character_template(scene, context):
-    """Apply basic production settings from the selected template."""
+    """Apply resolved production data from the selected template."""
 
-    template_key = scene.bps_character_template
-    template = get_template(template_key)
-
-    template_name = template.get(
-        "name",
-        "Generic",
+    character_data = resolve_character_data(
+        scene.bps_character_template
     )
 
-    # Keep Generic characters freely nameable.
-    # Named templates automatically apply their production name.
-    if template_key != "GENERIC":
-        scene.bps_character_name = template_name
+    # Generic characters remain freely nameable.
+    if character_data.template_key != "GENERIC":
+        scene.bps_character_name = character_data.name
 
-    scene.bps_character_height = float(
-        template.get(
-            "height",
-            1.0,
-        )
+    scene.bps_character_height = character_data.height
+    scene.bps_blueprint_preset = (
+        character_data.blueprint_preset
     )
 
-    blueprint_preset = template.get(
-        "blueprint_preset",
-        "STANDARD",
-    )
+    # Store resolved production information for other systems.
+    scene[
+        "bps_selected_template"
+    ] = character_data.template_key
 
-    valid_blueprint_presets = {
-        "PRESCHOOL",
-        "CHILD",
-        "STANDARD",
-    }
+    scene[
+        "bps_selected_template_name"
+    ] = character_data.name
 
-    if blueprint_preset not in valid_blueprint_presets:
-        blueprint_preset = "STANDARD"
+    scene[
+        "bps_selected_species"
+    ] = character_data.species
 
-    scene.bps_blueprint_preset = blueprint_preset
+    scene[
+        "bps_selected_head_style"
+    ] = character_data.head_style
 
-    # Store template information for operators and status displays.
-    scene["bps_selected_template"] = template_key
-    scene["bps_selected_template_name"] = template_name
-    scene["bps_selected_species"] = template.get(
-        "species",
-        "Generic",
-    )
+    scene[
+        "bps_selected_torso_style"
+    ] = character_data.torso_style
+
+    scene[
+        "bps_selected_arm_style"
+    ] = character_data.arm_style
+
+    scene[
+        "bps_selected_leg_style"
+    ] = character_data.leg_style
+
+    scene[
+        "bps_selected_hand_style"
+    ] = character_data.hand_style
+
+    scene[
+        "bps_selected_foot_style"
+    ] = character_data.foot_style
+
+    scene[
+        "bps_selected_eye_style"
+    ] = character_data.eye_style
+
+    scene[
+        "bps_selected_mouth_style"
+    ] = character_data.mouth_style
+
+    scene[
+        "bps_selected_rig_template"
+    ] = character_data.rig_template or ""
+
+    scene[
+        "bps_selected_material_template"
+    ] = character_data.material_template or ""
+
+    scene[
+        "bps_selected_primary_color"
+    ] = character_data.primary_color
+
+    scene[
+        "bps_selected_secondary_color"
+    ] = character_data.secondary_color
+
+    scene[
+        "bps_selected_accent_color"
+    ] = character_data.accent_color
 
 
 # ---------------------------------------------------------
@@ -130,6 +164,18 @@ class BPS_PT_CharacterPanel(bpy.types.Panel):
             scene,
             "bps_blueprint_preset",
             text="",
+        )
+
+        selected_species = scene.get(
+            "bps_selected_species",
+            "Generic",
+        )
+
+        character_box.separator()
+
+        character_box.label(
+            text=f"Species: {selected_species}",
+            icon="INFO",
         )
 
         # -------------------------------------------------
@@ -235,80 +281,120 @@ classes = (
 
 
 def register():
-    """Register Character Studio properties and its parent panel."""
+    """Register Character Studio properties and parent panel."""
 
-    bpy.types.Scene.bps_character_name = bpy.props.StringProperty(
-        name="Character Name",
-        description="Production name of the character",
-        default="",
+    bpy.types.Scene.bps_character_name = (
+        bpy.props.StringProperty(
+            name="Character Name",
+            description="Production name of the character",
+            default="",
+        )
     )
 
-    bpy.types.Scene.bps_character_template = bpy.props.EnumProperty(
-        name="Character Template",
-        description="Predefined production template for the character",
-        items=get_template_items(),
-        default="GENERIC",
-        update=apply_character_template,
-    )
-
-    bpy.types.Scene.bps_character_height = bpy.props.FloatProperty(
-        name="Character Height",
-        description="Production height of the character in meters",
-        default=1.0,
-        min=0.1,
-        max=20.0,
-        precision=2,
-    )
-
-    bpy.types.Scene.bps_blueprint_preset = bpy.props.EnumProperty(
-        name="Blueprint Preset",
-        description="Proportion system used by the blueprint and generators",
-        items=(
-            (
-                "PRESCHOOL",
-                "Stylized Preschool",
-                "Large head, compact torso, and shorter limbs",
+    bpy.types.Scene.bps_character_template = (
+        bpy.props.EnumProperty(
+            name="Character Template",
+            description=(
+                "Predefined production template "
+                "for the character"
             ),
-            (
-                "CHILD",
-                "Child",
-                "Balanced child proportions",
+            items=get_template_items(),
+            default="GENERIC",
+            update=apply_character_template,
+        )
+    )
+
+    bpy.types.Scene.bps_character_height = (
+        bpy.props.FloatProperty(
+            name="Character Height",
+            description=(
+                "Production height of the character "
+                "in meters"
             ),
-            (
-                "STANDARD",
-                "Standard",
-                "Neutral general-purpose proportions",
+            default=1.0,
+            min=0.1,
+            max=20.0,
+            precision=2,
+        )
+    )
+
+    bpy.types.Scene.bps_blueprint_preset = (
+        bpy.props.EnumProperty(
+            name="Blueprint Preset",
+            description=(
+                "Proportion system used by the "
+                "blueprint and generators"
             ),
-        ),
-        default="PRESCHOOL",
+            items=(
+                (
+                    "PRESCHOOL",
+                    "Stylized Preschool",
+                    (
+                        "Large head, compact torso, "
+                        "and shorter limbs"
+                    ),
+                ),
+                (
+                    "CHILD",
+                    "Child",
+                    "Balanced child proportions",
+                ),
+                (
+                    "STANDARD",
+                    "Standard",
+                    (
+                        "Neutral general-purpose "
+                        "proportions"
+                    ),
+                ),
+            ),
+            default="PRESCHOOL",
+        )
     )
 
-    bpy.types.Scene.bps_character_project_root = bpy.props.StringProperty(
-        name="Project Destination",
-        description="Folder where the character project will be created",
-        subtype="DIR_PATH",
-        default="",
+    bpy.types.Scene.bps_character_project_root = (
+        bpy.props.StringProperty(
+            name="Project Destination",
+            description=(
+                "Folder where the character project "
+                "will be created"
+            ),
+            subtype="DIR_PATH",
+            default="",
+        )
     )
 
-    bpy.types.Scene.bps_character_front_reference = bpy.props.StringProperty(
-        name="Front Reference",
-        description="Front-view character reference image",
-        subtype="FILE_PATH",
-        default="",
+    bpy.types.Scene.bps_character_front_reference = (
+        bpy.props.StringProperty(
+            name="Front Reference",
+            description=(
+                "Front-view character reference image"
+            ),
+            subtype="FILE_PATH",
+            default="",
+        )
     )
 
-    bpy.types.Scene.bps_character_side_reference = bpy.props.StringProperty(
-        name="Side Reference",
-        description="Side-view character reference image",
-        subtype="FILE_PATH",
-        default="",
+    bpy.types.Scene.bps_character_side_reference = (
+        bpy.props.StringProperty(
+            name="Side Reference",
+            description=(
+                "Side-view character reference image"
+            ),
+            subtype="FILE_PATH",
+            default="",
+        )
     )
 
-    bpy.types.Scene.bps_character_back_reference = bpy.props.StringProperty(
-        name="Back Reference",
-        description="Back-view character reference image",
-        subtype="FILE_PATH",
-        default="",
+    bpy.types.Scene.bps_character_back_reference = (
+        bpy.props.StringProperty(
+            name="Back Reference",
+            description=(
+                "Back-view character reference image"
+            ),
+            subtype="FILE_PATH",
+            default="",
+        )
     )
 
     for cls in classes:
@@ -316,7 +402,7 @@ def register():
 
 
 def unregister():
-    """Unregister the parent panel and Character Studio properties."""
+    """Unregister the parent panel and shared properties."""
 
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
