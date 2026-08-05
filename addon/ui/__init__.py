@@ -1,1 +1,1 @@
-from . import blueprint_panel
+"""User interface package for Blender Production System."""
