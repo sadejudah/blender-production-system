@@ -377,3 +377,18 @@ Understand the production pipeline before implementing new features.
 # Goal
 
 Maintain a clean, professional, scalable codebase capable of supporting long-term production work and open-source collaboration.
+## Vertical Slice Development
+
+Every production feature should be implemented as a complete vertical slice.
+
+Each slice includes:
+
+• User Interface
+• Operator
+• Engine
+• Core Integration
+• Validation Checks
+• Reports
+• Documentation
+
+A feature is considered complete only when all layers are implemented and tested.
