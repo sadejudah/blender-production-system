@@ -1,12 +1,26 @@
 # Changelog
 
-All notable changes to the Blender Production System (BPS) will be documented in this file.
+## Version 1.3.3
 
-The format is based on Keep a Changelog.
+### Added
+- Shared ProductionState singleton
+- Character Engine integration
+- Character validation workflow
+- Character reporting workflow
+- Active project tracking
+- Active template tracking
+- Character height tracking
 
----
+### Improved
+- Character Studio now updates the shared production session.
+- Production metadata is stored consistently across the application.
+- Character creation now completes a full production workflow.
 
-# Version 1.0.0
+### Fixed
+- Engine import/export issues
+- UI registration issues
+- CharacterEngine initialization
+- ProductionState integration
 Release Date: August 2026
 
 ## Added
