@@ -392,3 +392,24 @@ Each slice includes:
 • Documentation
 
 A feature is considered complete only when all layers are implemented and tested.
+A feature is complete only when it includes:
+
+✓ Architecture
+
+✓ UI
+
+✓ Operator
+
+✓ Engine
+
+✓ Core Integration
+
+✓ Validation
+
+✓ Report
+
+✓ Documentation
+
+✓ Testing
+
+✓ Release Notes
